@@ -9,15 +9,15 @@ import { useDeviceState } from "../hooks/useDeviceState";
 import { useCloudState } from "../hooks/useCloudState";
 import { useConnectionStatus } from "../hooks/useConnectionStatus";
 import { useAutoRefresh } from "../hooks/useAutoRefresh";
-import { AppSettings, AutoRefreshSettings, HeartbeatNormalized, CloudNormalized, ConnectionStatus } from "../lib/types";
+import { AppSettings, HeartbeatNormalized, CloudNormalized, ConnectionStatus } from "../lib/types";
+
+const AUTO_REFRESH_MS = 30_000;
 
 interface AppContextValue {
   // Settings
   settings: AppSettings;
-  autoRefresh: AutoRefreshSettings;
   settingsLoaded: boolean;
   saveSettings: (s: AppSettings) => Promise<void>;
-  saveAutoRefresh: (a: AutoRefreshSettings) => Promise<void>;
 
   // Device
   deviceData: HeartbeatNormalized | null;
@@ -41,13 +41,8 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppContextProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { settings, autoRefresh, loaded: settingsLoaded, saveSettings, saveAutoRefresh } =
-    useSettings();
+export function AppContextProvider({ children }: { children: React.ReactNode }) {
+  const { settings, loaded: settingsLoaded, saveSettings } = useSettings();
 
   const {
     data: deviceData,
@@ -72,27 +67,25 @@ export function AppContextProvider({
 
   // Initial data load once settings are ready
   useEffect(() => {
-    if (settingsLoaded) {
-      refreshAll();
-    }
+    if (settingsLoaded) refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsLoaded]);
 
-  // Auto refresh
-  useAutoRefresh(
-    refreshAll,
-    autoRefresh.intervalSeconds * 1000,
-    autoRefresh.enabled
-  );
+  // Cloud fetch depends on PID from device — re-fetch when PID first becomes available
+  useEffect(() => {
+    if (deviceData?.pid) refreshCloud();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceData?.pid]);
+
+  // Always auto-refresh every 30s
+  useAutoRefresh(refreshAll, AUTO_REFRESH_MS, true);
 
   return (
     <AppContext.Provider
       value={{
         settings,
-        autoRefresh,
         settingsLoaded,
         saveSettings,
-        saveAutoRefresh,
         deviceData,
         deviceLoading,
         deviceError,

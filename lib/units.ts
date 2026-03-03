@@ -11,6 +11,14 @@
  *   - validity is a YYYY-MM-DD string
  */
 
+/** Sentinel value (in litres) that represents an unlimited plan. */
+export const UNLIMITED_LITRES = 60020;
+
+/** Returns true if the litre value represents an unlimited plan. */
+export function isUnlimited(litres: number): boolean {
+  return litres >= UNLIMITED_LITRES;
+}
+
 /** Convert device raw litre value (disp/lim) to plain litres. */
 export function rawToLitres(raw: number): number {
   return raw / 1000;

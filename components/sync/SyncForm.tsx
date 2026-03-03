@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Switch } from "react-native";
+import React from "react";
+import { View, Text, TextInput, Switch, Platform } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { GlassView } from "../ui/GlassView";
 import { useTheme } from "../../lib/theme";
 import { SyncFormData, CloudNormalized, HeartbeatNormalized } from "../../lib/types";
@@ -11,17 +12,8 @@ interface SyncFormProps {
   cloudData?: CloudNormalized | null;
 }
 
-function formatDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 export function SyncForm({ form, onChange, deviceData, cloudData }: SyncFormProps) {
   const theme = useTheme();
-  const [validityInput, setValidityInput] = useState(formatDate(form.validityDate));
-
   const inputStyle = {
     backgroundColor: theme.fill,
     borderWidth: 1,
@@ -41,46 +33,52 @@ export function SyncForm({ form, onChange, deviceData, cloudData }: SyncFormProp
     letterSpacing: 0.2,
   };
 
-  function onValidityChange(s: string) {
-    setValidityInput(s);
-    const parts = s.split("-");
-    if (parts.length === 3 && parts[0].length === 4 && parts[1].length === 2 && parts[2].length === 2) {
-      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      if (!isNaN(d.getTime())) onChange({ ...form, validityDate: d });
-    }
-  }
-
-  function prefillFromServer() {
-    if (!cloudData) return;
-    setValidityInput(formatDate(cloudData.validity));
-    onChange({ ...form, validityDate: cloudData.validity, totalLitres: cloudData.allowedLitres, dispensedLitres: cloudData.consumedLitres });
+  function onDateChange(_: DateTimePickerEvent, selected?: Date) {
+    if (selected) onChange({ ...form, validityDate: selected });
   }
 
   return (
     <GlassView variant="card" radius={24} style={{ padding: 16, gap: 14 }}>
-      {cloudData && (
-        <TouchableOpacity onPress={prefillFromServer}>
-          <GlassView variant="accent" radius={12} style={{ paddingVertical: 10, alignItems: "center", backgroundColor: "rgba(0,122,255,0.1)", borderColor: "rgba(0,122,255,0.3)" }}>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#007AFF" }}>Pre-fill from Server</Text>
-          </GlassView>
-        </TouchableOpacity>
-      )}
-
-      <View>
-        <Text style={labelStyle}>Validity Date (YYYY-MM-DD)</Text>
-        <TextInput style={inputStyle} value={validityInput} onChangeText={onValidityChange} placeholder="2026-12-31" keyboardType="default" autoCapitalize="none" placeholderTextColor={theme.textQuaternary} />
+      {/* Validity date */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={[labelStyle, { marginBottom: 0 }]}>Validity Date</Text>
+        <DateTimePicker
+          value={form.validityDate}
+          mode="date"
+          display="compact"
+          minimumDate={new Date()}
+          onChange={onDateChange}
+          themeVariant="dark"
+        />
       </View>
 
+      {/* Total litres */}
       <View>
         <Text style={labelStyle}>Total Litres</Text>
-        <TextInput style={inputStyle} value={String(form.totalLitres)} onChangeText={(v) => onChange({ ...form, totalLitres: Number(v) || 0 })} keyboardType="numeric" placeholder="60" placeholderTextColor={theme.textQuaternary} />
+        <TextInput
+          style={inputStyle}
+          value={String(form.totalLitres)}
+          onChangeText={(v) => onChange({ ...form, totalLitres: Number(v) || 0 })}
+          keyboardType="numeric"
+          placeholder="60"
+          placeholderTextColor={theme.textQuaternary}
+        />
       </View>
 
+      {/* Dispensed litres */}
       <View>
         <Text style={labelStyle}>Dispensed Litres</Text>
-        <TextInput style={inputStyle} value={String(form.dispensedLitres)} onChangeText={(v) => onChange({ ...form, dispensedLitres: Number(v) || 0 })} keyboardType="numeric" placeholder="0" placeholderTextColor={theme.textQuaternary} />
+        <TextInput
+          style={inputStyle}
+          value={String(form.dispensedLitres)}
+          onChangeText={(v) => onChange({ ...form, dispensedLitres: Number(v) || 0 })}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={theme.textQuaternary}
+        />
       </View>
 
+      {/* Device PID (read-only) */}
       <View>
         <Text style={labelStyle}>Device PID</Text>
         <View style={[inputStyle, { justifyContent: "center" }]}>
@@ -90,6 +88,7 @@ export function SyncForm({ form, onChange, deviceData, cloudData }: SyncFormProp
         </View>
       </View>
 
+      {/* Sync clock toggle */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 2 }}>
         <View style={{ flex: 1, marginRight: 12 }}>
           <Text style={{ fontSize: 14, fontWeight: "600", color: theme.text }}>Sync device clock</Text>

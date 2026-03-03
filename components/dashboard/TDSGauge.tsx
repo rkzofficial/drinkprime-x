@@ -1,6 +1,5 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { FilterIcon } from "../../lib/icons";
 import { useTheme } from "../../lib/theme";
 import { tdsQualityLabel, tdsQualityColor } from "../../lib/units";
 
@@ -14,19 +13,13 @@ export function TDSGauge({ tds }: TDSGaugeProps) {
   const label = tdsQualityLabel(tds);
 
   return (
-    <View style={{ alignItems: "center" }}>
-      <View style={{
-        width: 88, height: 88, borderRadius: 44,
-        alignItems: "center", justifyContent: "center",
-        backgroundColor: color + "20",
-        borderWidth: 8, borderColor: color,
-      }}>
-        <FilterIcon size={20} color={color} />
-        <Text style={{ fontSize: 18, fontWeight: "700", color }}>{tds}</Text>
-        <Text style={{ fontSize: 12, color }}>ppm</Text>
-      </View>
-      <Text style={{ fontSize: 12, color: theme.textTertiary, marginTop: 4, fontWeight: "500" }}>TDS</Text>
-      <Text style={{ fontSize: 12, fontWeight: "600", color }}>{label}</Text>
+    <View style={{ alignItems: "center", flex: 1 }}>
+      <Text style={{ fontSize: 36, fontWeight: "800", color, letterSpacing: -1, lineHeight: 40 }}>
+        {tds}
+      </Text>
+      <Text style={{ fontSize: 11, color: theme.textTertiary, marginTop: 2 }}>ppm</Text>
+      <Text style={{ fontSize: 12, fontWeight: "600", color: theme.textSecondary, marginTop: 8 }}>TDS</Text>
+      <Text style={{ fontSize: 11, fontWeight: "600", color }}>{label}</Text>
     </View>
   );
 }

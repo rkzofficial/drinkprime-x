@@ -23,13 +23,7 @@ function GlassBackground({ style }: BottomSheetBackgroundProps) {
       borderTopLeftRadius: 32, borderTopRightRadius: 32,
       borderWidth: 1, borderColor: theme.sheetBorder,
       overflow: "hidden",
-    }]}>
-      <View pointerEvents="none" style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 40,
-        backgroundColor: theme.sheetSpecular,
-        borderTopLeftRadius: 32, borderTopRightRadius: 32,
-      }} />
-    </View>
+    }]} />
   );
 }
 

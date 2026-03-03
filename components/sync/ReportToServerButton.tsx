@@ -24,13 +24,7 @@ function GlassBackground({ style }: BottomSheetBackgroundProps) {
       borderTopLeftRadius: 32, borderTopRightRadius: 32,
       borderWidth: 1, borderColor: theme.sheetBorder,
       overflow: "hidden",
-    }]}>
-      <View pointerEvents="none" style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 40,
-        backgroundColor: theme.sheetSpecular,
-        borderTopLeftRadius: 32, borderTopRightRadius: 32,
-      }} />
-    </View>
+    }]} />
   );
 }
 
@@ -56,9 +50,10 @@ function Row({ label, value }: { label: string; value: string }) {
 interface ReportToServerButtonProps {
   deviceData: HeartbeatNormalized;
   onResult?: (success: boolean, message: string) => void;
+  asRow?: boolean;
 }
 
-export function ReportToServerButton({ deviceData, onResult }: ReportToServerButtonProps) {
+export function ReportToServerButton({ deviceData, onResult, asRow }: ReportToServerButtonProps) {
   const theme = useTheme();
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -101,24 +96,44 @@ export function ReportToServerButton({ deviceData, onResult }: ReportToServerBut
     }
   };
 
+  const trigger = asRow ? (
+    <TouchableOpacity
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setConfirmVisible(true);
+      }}
+      activeOpacity={0.7}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 16 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>Report to Cloud</Text>
+          <Text style={{ fontSize: 12, color: theme.textSecondary, marginTop: 2 }}>Sync device state to server</Text>
+        </View>
+        <Text style={{ fontSize: 20, color: "#007AFF", fontWeight: "300" }}>›</Text>
+      </View>
+    </TouchableOpacity>
+  ) : (
+    <TouchableOpacity
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setConfirmVisible(true);
+      }}
+      activeOpacity={0.8}
+    >
+      <GlassView radius={18} style={{
+        padding: 16, flexDirection: "row", alignItems: "center",
+        justifyContent: "center", gap: 10,
+        backgroundColor: "rgba(52,199,89,0.16)", borderColor: "rgba(52,199,89,0.4)",
+      }}>
+        <CloudUploadIcon size={20} color="#34C759" />
+        <Text style={{ fontSize: 16, fontWeight: "700", color: "#34C759" }}>Report to Server</Text>
+      </GlassView>
+    </TouchableOpacity>
+  );
+
   return (
     <>
-      <TouchableOpacity
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          setConfirmVisible(true);
-        }}
-        activeOpacity={0.8}
-      >
-        <GlassView radius={18} style={{
-          padding: 16, flexDirection: "row", alignItems: "center",
-          justifyContent: "center", gap: 10,
-          backgroundColor: "rgba(52,199,89,0.16)", borderColor: "rgba(52,199,89,0.4)",
-        }}>
-          <CloudUploadIcon size={20} color="#34C759" />
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#34C759" }}>Report to Server</Text>
-        </GlassView>
-      </TouchableOpacity>
+      {trigger}
 
       <BottomSheetModal
         ref={sheetRef}

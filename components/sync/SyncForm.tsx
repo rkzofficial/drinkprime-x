@@ -1,9 +1,10 @@
-import React from "react";
-import { View, Text, TextInput, Switch, Platform } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, Switch, Platform, TouchableOpacity } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { GlassView } from "../ui/GlassView";
 import { useTheme } from "../../lib/theme";
 import { SyncFormData, CloudNormalized, HeartbeatNormalized } from "../../lib/types";
+import { formatDateDisplay } from "../../lib/units";
 
 interface SyncFormProps {
   form: SyncFormData;
@@ -14,6 +15,7 @@ interface SyncFormProps {
 
 export function SyncForm({ form, onChange, deviceData, cloudData }: SyncFormProps) {
   const theme = useTheme();
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const inputStyle = {
     backgroundColor: theme.fill,
     borderWidth: 1,
@@ -34,6 +36,7 @@ export function SyncForm({ form, onChange, deviceData, cloudData }: SyncFormProp
   };
 
   function onDateChange(_: DateTimePickerEvent, selected?: Date) {
+    if (Platform.OS === "android") setShowDatePicker(false);
     if (selected) onChange({ ...form, validityDate: selected });
   }
 
@@ -42,14 +45,44 @@ export function SyncForm({ form, onChange, deviceData, cloudData }: SyncFormProp
       {/* Validity date */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={[labelStyle, { marginBottom: 0 }]}>Validity Date</Text>
-        <DateTimePicker
-          value={form.validityDate}
-          mode="date"
-          display="compact"
-          minimumDate={new Date()}
-          onChange={onDateChange}
-          themeVariant="dark"
-        />
+        {Platform.OS === "android" ? (
+          <>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={{
+                backgroundColor: theme.fill,
+                borderWidth: 1,
+                borderColor: theme.separator,
+                borderRadius: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 15, color: theme.text }}>
+                {formatDateDisplay(form.validityDate)}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={form.validityDate}
+                mode="date"
+                display="calendar"
+                minimumDate={new Date()}
+                onChange={onDateChange}
+              />
+            )}
+          </>
+        ) : (
+          <DateTimePicker
+            value={form.validityDate}
+            mode="date"
+            display="compact"
+            minimumDate={new Date()}
+            onChange={onDateChange}
+            themeVariant="dark"
+          />
+        )}
       </View>
 
       {/* Total litres */}
